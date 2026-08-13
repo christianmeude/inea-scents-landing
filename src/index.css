@@ -1,0 +1,171 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Outfit:wght@300;400;500;600&display=swap');
+@import 'tailwindcss';
+
+@theme {
+  /* INEA Scents Color Palette */
+
+  --color-primary: #A08E98;
+  --color-primary-light: #C2B4BC;
+  --color-primary-dark: #85717D;
+
+  --color-accent: #DCCED3;
+
+  --color-cream: #F8F5F4;
+  --color-beige: #ECE4E5;
+  --color-champagne: #E4D6DA;
+  --color-brown: #85717D;
+
+  --color-gray-soft: #F4F2F3;
+
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-body: 'Outfit', system-ui, sans-serif;
+
+  --radius-card: 20px;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: #FFFFFF;
+  color: #1a1a1a;
+  -webkit-font-smoothing: antialiased;
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+/* Hide scrollbar but allow scrolling */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #A08E9840;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #A08E9880;
+}
+
+/* Glassmorphism */
+.glass {
+  background: rgba(255, 255, 255, 0.68);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(160, 142, 152, 0.22);
+}
+
+.glass-dark {
+  background: rgba(160, 142, 152, 0.14);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.text-gold-gradient {
+  background: linear-gradient(
+    135deg,
+    #A08E98 0%,
+    #C2B4BC 50%,
+    #85717D 100%
+  );
+
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.btn-gold {
+  background: linear-gradient(
+    135deg,
+    #A08E98 0%,
+    #C2B4BC 45%,
+    #85717D 100%
+  );
+
+  background-size: 200% 200%;
+  transition:
+    background-position 0.4s ease,
+    transform 0.2s ease,
+    box-shadow 0.3s ease;
+}
+
+.btn-gold:hover {
+  background-position: right center;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(160, 142, 152, 0.35);
+}
+
+/* Card hover lift */
+.card-hover {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.card-hover:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
+}
+
+/* Floating animation */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-12px); }
+}
+.float-anim {
+  animation: float 5s ease-in-out infinite;
+}
+
+/* Fade in up */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-in-up {
+  animation: fadeInUp 0.7s ease forwards;
+}
+
+/* Timeline connector */
+.timeline-line {
+  width: 1px;
+  background: linear-gradient(to bottom, #A08E98, transparent);
+}
+
+/* Section divider */
+.gold-divider {
+  width: 60px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #A08E98, transparent);
+  margin: 0 auto;
+}
+
+/* Masonry grid */
+.masonry {
+  columns: 3;
+  column-gap: 16px;
+}
+.masonry-item {
+  break-inside: avoid;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 768px) {
+  .masonry {
+    columns: 2;
+  }
+}
+@media (max-width: 480px) {
+  .masonry {
+    columns: 1;
+  }
+}
+
+/* Nav blur on scroll */
+.nav-scrolled {
+  background: rgba(255, 255, 255, 0.92) !important;
+  box-shadow: 0 1px 32px rgba(0,0,0,0.06);
+}
