@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-14T20:54:01Z",
+  "title": "Design System: Inea Scents",
+  "extensions": {
+    "colorMeta": {
+      "primary": { "role": "primary", "displayName": "Dark Plum", "canonical": "#6a4053", "tonalRamp": ["#361b27", "#4b2738", "#6a4053", "#895d73", "#a87d92", "#c69db2", "#e3bed3", "#ffe0f2"] },
+      "secondary": { "role": "secondary", "displayName": "Muted Plum", "canonical": "#99868c", "tonalRamp": ["#423439", "#635056", "#816d74", "#99868c", "#b8a3ab", "#d6c1c9", "#f5e0e7", "#fff2f6"] },
+      "tertiary": { "role": "tertiary", "displayName": "Dusty Rose", "canonical": "#c4acac", "tonalRamp": ["#5a4646", "#7d6666", "#a18888", "#c4acac", "#e2caca", "#ffeaec", "#fff4f5", "#fffbfa"] },
+      "neutral-bg": { "role": "neutral", "displayName": "Light Cream", "canonical": "#fdf4f5", "tonalRamp": ["#e0d7d8", "#f0e6e7", "#fdf4f5", "#fffcfd", "#ffffff", "#ffffff", "#ffffff", "#ffffff"] },
+      "neutral-surface": { "role": "neutral", "displayName": "Surface White", "canonical": "#ffffff", "tonalRamp": ["#ffffff", "#ffffff", "#ffffff", "#ffffff", "#ffffff", "#ffffff", "#ffffff", "#ffffff"] },
+      "neutral-text": { "role": "neutral", "displayName": "Dark Plum Text", "canonical": "#6a4053", "tonalRamp": ["#361b27", "#4b2738", "#6a4053", "#895d73", "#a87d92", "#c69db2", "#e3bed3", "#ffe0f2"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Hero headlines only." },
+      "title": { "displayName": "Title", "purpose": "Page and section headers, always rendered in Dark Plum." },
+      "body": { "displayName": "Body", "purpose": "General UI text." }
+    },
+    "shadows": [
+      { "name": "ambient-low", "value": "0 4px 24px rgba(106, 64, 83, 0.08)", "purpose": "Diffuse hover glow under primary content cards." }
+    ],
+    "motion": [
+      { "name": "ease-standard", "value": "cubic-bezier(0.4, 0, 0.2, 1)", "purpose": "Default easing for state transitions." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Solid pill button for primary actions.",
+      "html": "<button class=\"ds-btn-primary\">Book Now</button>",
+      "css": ".ds-btn-primary { background: #6a4053; color: #ffffff; padding: 0.75rem 2rem; border-radius: 9999px; font-family: Figtree, sans-serif; font-weight: 600; border: none; cursor: pointer; transition: background 0.2s; } .ds-btn-primary:hover { background: #4b2738; }"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Outline pill button for secondary actions.",
+      "html": "<button class=\"ds-btn-outline\">View Packages</button>",
+      "css": ".ds-btn-outline { background: transparent; color: #6a4053; padding: 0.5rem 1rem; border-radius: 9999px; font-family: Figtree, sans-serif; font-weight: 600; border: 1px solid #6a4053; cursor: pointer; transition: background 0.2s, color 0.2s; } .ds-btn-outline:hover { background: #6a4053; color: #ffffff; }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input-text",
+      "description": "Soft rounded rectangle for forms.",
+      "html": "<input type=\"text\" class=\"ds-input-text\" placeholder=\"Enter details\" />",
+      "css": ".ds-input-text { background: transparent; color: #6a4053; padding: 0.75rem 1rem; border-radius: 1rem; border: 1px solid #c4acac; font-family: Figtree, sans-serif; width: 100%; box-sizing: border-box; outline: none; transition: border-color 0.2s; } .ds-input-text:focus { border-color: #6a4053; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Elegant Concierge",
+    "overview": "The visual system is warm, inviting, and graceful, heavily inspired by high-end cosmetic and perfume branding. It leans into a soft, romantic palette of plums, dusty roses, and warm creams. The interface balances structural elegance with a mix of soft rounded rectangles for data entry, and highly tactile pill shapes for actions.",
+    "keyCharacteristics": [
+      "**Soft geometries:** Extensive use of pill shapes for actions, and soft rounded rectangles (8-12px) for inputs and cards.",
+      "**Monochromatic warmth:** UI elements, text, and borders all heavily utilize the primary Dark Plum color instead of harsh blacks or greys.",
+      "**Ambient Depth:** Very soft drop shadows lift primary content cards, while sticky navigation elements utilize glassmorphism (translucency + background blur).",
+      "**Semantic Clarity:** Statuses use clear, bright semantic colors (green, yellow, red) as pill-shaped tags to stand out against the warm, muted palette."
+    ],
+    "rules": [
+      {
+        "name": "The No-Black Rule",
+        "body": "Pure black is avoided. Text, icons, and structural lines use Dark Plum to maintain the soft, warm aesthetic.",
+        "section": "colors"
+      },
+      {
+        "name": "The Pill Rule",
+        "body": "Actions have pill shapes (`9999px`).",
+        "section": "components"
+      },
+      {
+        "name": "The Soft Rectangle",
+        "body": "Forms have soft rounded corners (approx 8px to 12px radius). Text inputs, search bars, and form textareas are *not* pills. They are standard rounded rectangles.",
+        "section": "components"
+      }
+    ],
+    "dos": [
+      "Do use pill shapes for all buttons and status tags.",
+      "Do use soft rounded rectangles for text inputs and search bars.",
+      "Do use Dark Plum (#6a4053) for primary text and headings instead of black or dark grey.",
+      "Do use ambient, soft drop shadows for main white cards.",
+      "Do use glassmorphism for sticky navigation bars."
+    ],
+    "donts": [
+      "Don't use sharp corners for any element.",
+      "Don't use pill shapes for standard text inputs or textareas; reserve pills for actions (buttons) and metadata (tags).",
+      "Don't use pure black or stark dark greys."
+    ]
+  }
+}
