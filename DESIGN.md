@@ -86,6 +86,10 @@ The palette is derived directly from the brand's floral and cosmetic inspiration
 - **Light Cream** (#fdf4f5): The primary background color for the application shell, providing a warm alternative to stark white.
 - **Surface White** (#ffffff): Used for content cards (like the calendar component or product cards) to contrast against the cream background.
 
+### Scrim
+- **Light Scrim** (rgba(43, 15, 31, 0.5)): Overlay for modal backgrounds and image dimming (light contexts).
+- **Dark Scrim** (rgba(43, 15, 31, 0.62)): Overlay for hero sections and full-bleed image overlays.
+
 ### Semantic
 - **Success (Green):** Used for "Confirmed" or "Payment Successful".
 - **Pending (Yellow):** Used for pending states.
