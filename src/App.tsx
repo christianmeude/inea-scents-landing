@@ -370,7 +370,7 @@ function ContactForm() {
             err('date', 'date-error')
           ) : (
             <span id="date-hint" className="text-primary/80 dark:text-cream/50 text-xs mt-2 block">
-              Tentative or leave blank — put details in message.
+              Tentative or leave blank — add them under Details.
             </span>
           )}
         </div>
