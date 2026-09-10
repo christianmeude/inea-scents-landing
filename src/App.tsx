@@ -1,10 +1,81 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
-const InstagramIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-    <rect x="2" y="2" width="20" height="20" rx="5" />
+type Theme = 'light' | 'dark'
+
+function useTheme(): [Theme, () => void] {
+  const [theme, setTheme] = useState<Theme>(() =>
+    document.documentElement.classList.contains('dark') ? 'dark' : 'light',
+  )
+  const toggle = () => {
+    const next: Theme = theme === 'light' ? 'dark' : 'light'
+    setTheme(next)
+    document.documentElement.classList.toggle('dark', next === 'dark')
+    try {
+      localStorage.setItem('inea-theme', next)
+    } catch {
+      /* private mode: theme simply won't persist */
+    }
+  }
+  return [theme, toggle]
+}
+
+/* Pauses the levitating mesh when the hero scrolls offscreen */
+function useMeshPause() {
+  useEffect(() => {
+    const layer = document.querySelector('.mesh-layer')
+    const hero = document.querySelector('header')
+    if (!layer || !hero || !('IntersectionObserver' in window)) return
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => layer.classList.toggle('paused', !entry.isIntersecting))
+      },
+      { threshold: 0 },
+    )
+    io.observe(hero)
+    return () => io.disconnect()
+  }, [])
+}
+
+/* Reveal-once observer for the single authored motion */
+function useRise() {
+  useEffect(() => {
+    const els = Array.from(document.querySelectorAll('.rise, .hero-photo'))
+    if (!('IntersectionObserver' in window)) {
+      els.forEach((el) => el.classList.add('in'))
+      return
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('in')
+            io.unobserve(entry.target)
+          }
+        })
+      },
+      { threshold: 0.12 },
+    )
+    els.forEach((el) => io.observe(el))
+    return () => io.disconnect()
+  }, [])
+}
+
+const SunIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
     <circle cx="12" cy="12" r="4" />
-    <circle cx="17.5" cy="6.5" r="1" fill="currentColor" />
+    <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+  </svg>
+)
+
+const MoonIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z" />
+  </svg>
+)
+
+const CheckIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M20 6L9 17l-5-5" />
   </svg>
 )
 
@@ -14,300 +85,636 @@ const FacebookIcon = () => (
   </svg>
 )
 
-function Logo() {
+const ArrowIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M5 12h14M13 6l6 6-6 6" />
+  </svg>
+)
+
+function Logo({ tone = 'plum' }: { tone?: 'plum' | 'cream' }) {
+  const color = tone === 'plum' ? 'text-primary dark:text-cream' : 'text-cream'
   return (
-    <div className="inline-flex items-baseline justify-center cursor-pointer group hover:opacity-80 transition-opacity" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-      <span className="font-logo-sans text-3xl font-bold tracking-[0.15em] text-cream">INEA</span>
-      <span className="font-logo-script -ml-[0.85em] translate-y-[35%] text-4xl text-cream">Scents</span>
+    <div
+      className={`inline-flex items-baseline justify-center cursor-pointer hover:opacity-80 transition-opacity ${color}`}
+      onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+      role="link"
+      aria-label="Inea Scents - back to top"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') window.scrollTo({ top: 0, behavior: 'smooth' })
+      }}
+    >
+      <span className="font-logo-sans text-2xl sm:text-3xl font-bold tracking-[0.15em]">INEA</span>
+      <span className="font-logo-script -ml-[0.85em] translate-y-[35%] text-3xl sm:text-4xl">Scents</span>
     </div>
   )
 }
 
-function ContactForm() {
-  const [form, setForm] = useState({ name: '', email: '', phone: '', date: '', message: '' })
-  const [errors, setErrors] = useState<Record<string, string>>({})
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [showModal, setShowModal] = useState(false)
-  
-  const validate = () => {
-    const newErrors: Record<string, string> = {}
-    if (!form.name.trim()) newErrors.name = 'Please provide your name'
-    if (!form.email.trim() || !/^\S+@\S+\.\S+$/.test(form.email)) newErrors.email = 'Please provide a valid email'
-    if (!form.phone.trim() || !/^[\+0-9\s\-]{7,20}$/.test(form.phone)) newErrors.phone = 'Please provide a valid phone number'
-    if (!form.date) newErrors.date = 'Please select a date'
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
-
-  const handle = (e: React.FormEvent) => { 
-    e.preventDefault(); 
-    if (validate()) {
-      setIsSubmitting(true)
-      setTimeout(() => {
-        setIsSubmitting(false)
-        setShowModal(true)
-      }, 1000)
-    }
-  }
-
-  // Handle escape to close
-  useEffect(() => {
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && showModal) {
-        setShowModal(false)
-        // Resetting form on Esc intentionally removed for data preservation
-      }
-    }
-    window.addEventListener('keydown', handleEsc)
-    return () => window.removeEventListener('keydown', handleEsc)
-  }, [showModal])
-  
-  const labelClass = "text-xs font-bold uppercase tracking-[0.2em] mb-3 block text-cream/60"
-  const getInputClass = (hasError: boolean) => 
-    `w-full bg-transparent border-b ${hasError ? 'border-accent' : 'border-cream/20 focus:border-cream'} focus:ring-0 outline-none px-0 py-3 text-lg text-cream placeholder-cream/20 transition-colors rounded-none`
-
-  // Date constraint: today
-  const today = new Date().toISOString().split('T')[0]
-
+function ThemeButton({ theme, onToggle }: { theme: Theme; onToggle: () => void }) {
   return (
-    <>
-      <form onSubmit={handle} noValidate className="space-y-12 relative z-10">
-        <div className="grid md:grid-cols-2 gap-12">
-          <div>
-            <label htmlFor="name" className={labelClass}>Full Name</label>
-            <input id="name" type="text" value={form.name} onChange={e => { setForm({ ...form, name: e.target.value }); setErrors({...errors, name: ''}) }} className={getInputClass(!!errors.name)} placeholder="Maria Santos" />
-            {errors.name && <span className="text-accent text-sm mt-2 block font-light">{errors.name}</span>}
-          </div>
-          <div>
-            <label htmlFor="email" className={labelClass}>Email</label>
-            <input id="email" type="email" value={form.email} onChange={e => { setForm({ ...form, email: e.target.value }); setErrors({...errors, email: ''}) }} className={getInputClass(!!errors.email)} placeholder="maria@email.com" />
-            {errors.email && <span className="text-accent text-sm mt-2 block font-light">{errors.email}</span>}
-          </div>
-        </div>
-        <div className="grid md:grid-cols-2 gap-12">
-          <div>
-            <label htmlFor="phone" className={labelClass}>Phone</label>
-            <input id="phone" type="tel" inputMode="tel" value={form.phone} onChange={e => { setForm({ ...form, phone: e.target.value }); setErrors({...errors, phone: ''}) }} className={getInputClass(!!errors.phone)} placeholder="+63 912 345 6789" />
-            <span className="text-cream/40 text-xs mt-2 block">Philippine mobile or landline</span>
-            {errors.phone && <span className="text-accent text-sm mt-1 block font-light">{errors.phone}</span>}
-          </div>
-          <div>
-            <label htmlFor="date" className={labelClass}>Event Date</label>
-            <input id="date" type="date" min={today} value={form.date} onChange={e => { setForm({ ...form, date: e.target.value }); setErrors({...errors, date: ''}) }} className={getInputClass(!!errors.date)} />
-            {errors.date && <span className="text-accent text-sm mt-2 block font-light">{errors.date}</span>}
-          </div>
-        </div>
-        <div>
-          <label htmlFor="message" className={labelClass}>Details <span className="normal-case tracking-normal font-light opacity-60">(Optional)</span></label>
-          <textarea id="message" rows={4} value={form.message} onChange={e => setForm({ ...form, message: e.target.value })} className={`${getInputClass(false)} resize-y min-h-[100px]`} placeholder="Guest count, venue, theme, wedding or corporate event..." />
-        </div>
-        <div className="pt-8 text-center">
-          <button type="submit" disabled={isSubmitting} className="bg-cream text-primary w-full py-5 rounded-full text-sm font-bold uppercase tracking-[0.2em] hover:bg-cream/90 transition-all disabled:opacity-70 disabled:cursor-not-allowed">
-            {isSubmitting ? 'Securing...' : 'Reserve Your Date'}
-          </button>
-          <p className="text-xs text-cream/40 mt-4 tracking-wider">Your information is never shared.</p>
-        </div>
-      </form>
-
-      {/* Success Modal */}
-      {showModal && (
-        <div 
-          className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-primary/80 backdrop-blur-md transition-opacity"
-          onClick={() => setShowModal(false)}
-        >
-          <div 
-            className="bg-primary-dark max-w-lg w-full p-12 text-center border border-cream/10 shadow-2xl rounded-2xl"
-            onClick={e => e.stopPropagation()}
-          >
-            <h3 className="font-logo-sans text-4xl font-bold uppercase tracking-tighter mb-4 text-cream">Request Received</h3>
-            <p className="text-cream/80 font-light text-lg mb-10 leading-relaxed">
-              Your inquiry has been secured. Our Scent Concierge will contact you within 24 hours to begin crafting your bespoke bar.
-            </p>
-            <button 
-              onClick={() => { setShowModal(false); setForm({ name: '', email: '', phone: '', date: '', message: '' }) }}
-              className="bg-cream text-primary px-10 py-4 rounded-full text-sm font-bold uppercase tracking-[0.2em] hover:bg-cream/90 transition-all"
-            >
-              Finish
-            </button>
-          </div>
-        </div>
-      )}
-    </>
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-label={theme === 'light' ? 'Switch to dark theme' : 'Switch to light theme'}
+      className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-primary/20 dark:border-cream/20 text-primary dark:text-cream hover:bg-primary/5 dark:hover:bg-cream/10 transition-colors"
+    >
+      {theme === 'light' ? <MoonIcon /> : <SunIcon />}
+    </button>
   )
 }
 
+const API_BASE = (import.meta.env.VITE_API_URL ?? '').replace(/\/$/, '')
+
+function ContactForm() {
+  const [form, setForm] = useState({ name: '', email: '', phone: '', date: '', message: '', website: '' })
+  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [sent, setSent] = useState(false)
+
+  const validate = () => {
+    const next: Record<string, string> = {}
+    if (!form.name.trim()) next.name = 'Please tell us your name so we know who to reply to.'
+    if (!form.email.trim() || !/^\S+@\S+\.\S+$/.test(form.email))
+      next.email = 'That email does not look complete - please check it.'
+    if (!form.phone.trim() || !/^[\+0-9\s\-]{7,20}$/.test(form.phone))
+      next.phone = 'Please add a reachable phone number.'
+    setErrors(next)
+    const first = ['name', 'email', 'phone'].find((k) => next[k])
+    if (first) document.getElementById(first)?.focus()
+    return Object.keys(next).length === 0
+  }
+
+  const applyFieldErrors = (fields: Record<string, string[] | string>) => {
+    const next: Record<string, string> = {}
+    for (const [rawKey, rawValue] of Object.entries(fields)) {
+      const msg = Array.isArray(rawValue) ? rawValue[0] : rawValue
+      if (!msg) continue
+      const key = rawKey === 'event_date' ? 'date' : rawKey.replace(/^customer_/, '')
+      if (['name', 'email', 'phone', 'date', 'message'].includes(key)) next[key] = msg
+    }
+    setErrors(next)
+    const first = ['name', 'email', 'phone', 'date', 'message'].find((k) => next[k])
+    if (first) document.getElementById(first)?.focus()
+  }
+
+  const handle = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (sent || isSubmitting) return
+    if (!validate()) return
+    if (!API_BASE) {
+      setErrors({ submit: 'Form not configured. Message us on Facebook.' })
+      return
+    }
+    setIsSubmitting(true)
+    try {
+      const res = await fetch(`${API_BASE}/api/inquiries`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({
+          name: form.name,
+          email: form.email,
+          phone: form.phone,
+          event_date: form.date || null,
+          message: form.message,
+          website: form.website,
+        }),
+      })
+      if (res.ok) {
+        setSent(true)
+        return
+      }
+      let data: { errors?: Record<string, string[] | string> } = {}
+      try {
+        data = await res.json()
+      } catch {
+        /* non-JSON error body: fall through to generic banner */
+      }
+      if (res.status === 422 && data.errors) {
+        applyFieldErrors(data.errors)
+        return
+      }
+      setErrors({ submit: 'Something went wrong sending — try again or message us on Facebook.' })
+    } catch {
+      setErrors({ submit: 'Something went wrong sending — try again or message us on Facebook.' })
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const today = new Date().toISOString().split('T')[0]
+
+  if (sent) {
+    return (
+      <div className="rounded-3xl bg-white dark:bg-night-surface border border-primary/15 dark:border-cream/15 p-8 md:p-10 text-center lift">
+        <h3
+          tabIndex={-1}
+          ref={(el) => {
+            el?.focus({ preventScroll: true })
+          }}
+          className="font-logo-sans text-3xl md:text-4xl font-bold uppercase tracking-tight mb-4 outline-none"
+        >
+          Inquiry received
+        </h3>
+        <p className="text-lg font-light text-primary/80 dark:text-cream/80 leading-relaxed mb-4">
+          Thank you{form.name.trim() ? `, ${form.name.trim().split(' ')[0]}` : ''}. We have your
+          details and will reply to confirm availability for {form.date || 'your event'}.
+        </p>
+        <p className="text-primary/70 dark:text-cream/70 font-light mb-8">
+          Prefer to chat now? Message us on{' '}
+          <a
+            href="https://www.facebook.com/profile.php?id=61580331093927"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline underline-offset-4 decoration-accent hover:decoration-primary dark:hover:decoration-cream transition-colors"
+          >
+            Facebook
+          </a>
+          .
+        </p>
+        <button
+          type="button"
+          onClick={() => {
+            setSent(false)
+            setForm({ name: '', email: '', phone: '', date: '', message: '', website: '' })
+          }}
+          className="text-sm font-bold uppercase tracking-[0.2em] text-primary dark:text-cream underline underline-offset-8 decoration-primary/30 dark:decoration-cream/30 hover:decoration-primary dark:hover:decoration-cream transition-colors"
+        >
+          Send another inquiry
+        </button>
+      </div>
+    )
+  }
+
+  const labelClass =
+    'text-xs font-bold uppercase tracking-[0.2em] mb-2 block text-primary/80 dark:text-cream/70'
+  const getInputClass = (hasError: boolean) =>
+    `w-full bg-transparent border-b ${hasError ? 'border-clay dark:border-red-300' : 'border-primary/25 dark:border-cream/25 focus:border-primary dark:focus:border-cream'} focus:ring-0 outline-none px-0 py-2.5 text-base text-primary dark:text-cream placeholder-primary/80 dark:placeholder-cream/60 transition-colors rounded-none`
+
+  const clearError = (key: string) =>
+    setErrors((prev) => ({ ...prev, [key]: '', submit: '' }))
+  const err = (key: string, id: string) =>
+    errors[key] ? (
+      <span id={id} className="text-clay dark:text-red-300 text-sm mt-2 block font-light">
+        {errors[key]}
+      </span>
+    ) : null
+
+  return (
+    <form onSubmit={handle} noValidate className="space-y-5">
+      <input
+        type="text"
+        name="website"
+        value={form.website}
+        onChange={(e) => {
+          setForm({ ...form, website: e.target.value })
+          clearError('submit')
+        }}
+        tabIndex={-1}
+        autoComplete="off"
+        aria-hidden="true"
+        style={{ display: 'none' }}
+      />
+      {errors.submit ? (
+        <p role="alert" className="text-clay dark:text-red-300 text-sm block font-light">
+          {errors.submit}
+        </p>
+      ) : null}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div>
+          <label htmlFor="name" className={labelClass}>
+            Full Name
+          </label>
+          <input
+            id="name"
+            type="text"
+            autoComplete="name"
+            value={form.name}
+            onChange={(e) => {
+              setForm({ ...form, name: e.target.value })
+              clearError('name')
+            }}
+            className={getInputClass(!!errors.name)}
+            placeholder="Maria Santos"
+            aria-invalid={!!errors.name}
+            aria-describedby={errors.name ? 'name-error' : undefined}
+          />
+          {err('name', 'name-error')}
+        </div>
+        <div>
+          <label htmlFor="email" className={labelClass}>
+            Email
+          </label>
+          <input
+            id="email"
+            type="email"
+            autoComplete="email"
+            value={form.email}
+            onChange={(e) => {
+              setForm({ ...form, email: e.target.value })
+              clearError('email')
+            }}
+            className={getInputClass(!!errors.email)}
+            placeholder="maria@email.com"
+            aria-invalid={!!errors.email}
+            aria-describedby={errors.email ? 'email-error' : undefined}
+          />
+          {err('email', 'email-error')}
+        </div>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div>
+          <label htmlFor="phone" className={labelClass}>
+            Phone
+          </label>
+          <input
+            id="phone"
+            type="tel"
+            inputMode="tel"
+            autoComplete="tel"
+            value={form.phone}
+            onChange={(e) => {
+              setForm({ ...form, phone: e.target.value })
+              clearError('phone')
+            }}
+            className={getInputClass(!!errors.phone)}
+            placeholder="+63 912 345 6789"
+            aria-invalid={!!errors.phone}
+            aria-describedby={errors.phone ? 'phone-error' : undefined}
+          />
+          {errors.phone ? (
+            err('phone', 'phone-error')
+          ) : (
+            <span className="text-primary/80 dark:text-cream/50 text-xs mt-2 block">
+              Philippine mobile or landline
+            </span>
+          )}
+        </div>
+        <div>
+          <label htmlFor="date" className={labelClass}>
+            Event Date
+          </label>
+          <input
+            id="date"
+            type="date"
+            min={today}
+            value={form.date}
+            onChange={(e) => {
+              setForm({ ...form, date: e.target.value })
+              clearError('date')
+            }}
+            className={getInputClass(!!errors.date)}
+            aria-invalid={!!errors.date}
+            aria-describedby={errors.date ? 'date-error' : 'date-hint'}
+          />
+          {errors.date ? (
+            err('date', 'date-error')
+          ) : (
+            <span id="date-hint" className="text-primary/80 dark:text-cream/50 text-xs mt-2 block">
+              Tentative or leave blank — put details in message.
+            </span>
+          )}
+        </div>
+      </div>
+      <details className="group">
+        <summary className="list-none cursor-pointer text-xs font-bold uppercase tracking-[0.2em] text-primary/80 dark:text-cream/70 flex items-center gap-2 [&::-webkit-details-marker]:hidden">
+          <span aria-hidden="true" className="inline-block transition-transform group-open:rotate-45 text-base leading-none font-normal">+</span>
+          Details <span className="normal-case tracking-normal font-light opacity-60">(Optional)</span>
+        </summary>
+        <textarea
+          id="message"
+          aria-label="Event details, optional"
+          rows={2}
+          value={form.message}
+          onChange={(e) => {
+            setForm({ ...form, message: e.target.value })
+            clearError('message')
+          }}
+          className={`${getInputClass(!!errors.message)} resize-y min-h-[64px] mt-3`}
+          placeholder="Guest count, venue, theme..."
+          aria-invalid={!!errors.message}
+          aria-describedby={errors.message ? 'message-error' : undefined}
+        />
+        {err('message', 'message-error')}
+      </details>
+      <div className="pt-2 text-center">
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="bg-primary text-cream w-full py-4 rounded-full text-sm font-bold uppercase tracking-[0.2em] hover:bg-primary-dark dark:hover:bg-cream dark:hover:text-primary transition-all disabled:opacity-70 disabled:cursor-not-allowed inline-flex items-center justify-center gap-3"
+        >
+          {isSubmitting ? 'Sending...' : (
+            <>
+              Send Inquiry <ArrowIcon />
+            </>
+          )}
+        </button>
+        <p className="text-xs text-primary/80 dark:text-cream/50 mt-4 tracking-wider">
+          Your information stays with us - never shared.
+        </p>
+      </div>
+    </form>
+  )
+}
+
+const INCLUDED = [
+  'Every bottle personalized with your logo, finished with a hemp cord',
+  '4 inspired scents for guests to choose from',
+  'Styled perfume bar set up at your venue',
+  'Claim stub for every guest',
+  '3 to 4 hours of service with 2 staff members',
+]
+
+const FREE = ['Selfie mirror for your guests', 'A gift for the celebrant']
+
+const STEPS = [
+  {
+    name: 'Inquire',
+    text: 'Tell us your event date and guest count. We confirm availability and walk you through the scents.',
+  },
+  {
+    name: 'We set up',
+    text: 'On the day, we arrive early and style the bar to your venue - you host, we handle the rest.',
+  },
+  {
+    name: 'Guests discover',
+    text: 'Everyone explores the scents with our team and finds the one that fits them.',
+  },
+  {
+    name: 'They take it home',
+    text: 'Each guest leaves with a 10ml bottle, personalized with your logo - a favor that gets kept.',
+  },
+]
+
 export default function App() {
+  const [theme, toggleTheme] = useTheme()
   const [scrolled, setScrolled] = useState(false)
 
+  useRise()
+  useMeshPause()
+
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 40)
-    window.addEventListener('scroll', onScroll)
+    const onScroll = () => setScrolled(window.scrollY > 24)
+    window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
+  const scrollToInquiry = () =>
+    document.getElementById('inquire')?.scrollIntoView({ behavior: 'smooth' })
+
   return (
-    <div className="min-h-screen bg-primary text-cream selection:bg-cream selection:text-primary font-body">
-      
-      {/* Navigation */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 border-b ${scrolled ? 'bg-primary/90 backdrop-blur-md border-cream/10 py-4' : 'bg-transparent border-transparent py-6'}`}>
+    <div className="min-h-screen bg-cream dark:bg-night text-primary dark:text-cream selection:bg-primary selection:text-cream dark:selection:bg-cream dark:selection:text-primary font-body">
+      <nav
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 border-b ${
+          scrolled
+            ? 'bg-cream/85 dark:bg-night/85 backdrop-blur-md border-primary/10 dark:border-cream/10 py-3'
+            : 'bg-transparent border-transparent py-5'
+        }`}
+      >
         <div className="max-w-7xl mx-auto px-6 lg:px-12 flex items-center justify-between">
           <Logo />
-          <button onClick={() => document.getElementById('inquire')?.scrollIntoView({ behavior: 'smooth' })} className="text-xs font-bold uppercase tracking-[0.2em] hover:text-cream/80 transition-colors">
-            Inquire
-          </button>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <ThemeButton theme={theme} onToggle={toggleTheme} />
+            <button
+              onClick={scrollToInquiry}
+              className="bg-primary text-cream dark:bg-cream dark:text-primary text-xs font-bold uppercase tracking-[0.2em] px-4 sm:px-6 py-3 rounded-full hover:bg-primary-dark dark:hover:bg-cream/90 transition-colors whitespace-nowrap"
+            >
+              Inquire
+            </button>
+          </div>
         </div>
       </nav>
 
-      <main className="pt-32">
-        {/* The Velvet Typographic Grid - Hero */}
-        <header className="relative w-full pt-12 pb-16 md:pb-24 overflow-hidden">
-          {/* Living cinematic still: generated atmosphere + scrim */}
-          <div className="hero-atmosphere-layer" aria-hidden="true">
-            <div className="hero-atmosphere" />
-            <div className="hero-scrim" />
+      <main>
+        <header className="relative w-full overflow-hidden">
+          <div className="mesh-layer" aria-hidden="true">
+            <span className="mesh-a" />
+            <span className="mesh-b" />
+            <span className="mesh-c" />
+            <span className="mesh-d" />
           </div>
 
-          <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-12">
-            <h1 className="relative z-10 block">
-              <span className="block font-logo-sans text-[12vw] leading-[0.8] font-bold tracking-tighter uppercase opacity-90 break-words mix-blend-screen">
-                THE<br/>BESPOKE
-              </span>
-              <span className="block relative h-24 sm:h-32 md:h-40 -mt-8 md:-mt-16 lg:-mt-24 z-20 pointer-events-none">
-                <span className="font-logo-script text-[15vw] leading-none text-accent absolute left-[10%] transform -rotate-3 mix-blend-screen">
-                  Fragrance
+          <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-12 pt-24 md:pt-28 pb-12 md:pb-14 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-center lg:min-h-[100svh] lg:content-center">
+            <div className="lg:col-span-6 min-w-0">
+              <h1 className="rise font-logo-sans font-bold uppercase tracking-tight leading-[0.95] text-4xl sm:text-6xl md:text-6xl text-balance">
+                <span className="block">The perfume bar guests</span>
+                <span className="block font-logo-script normal-case font-normal tracking-normal text-5xl sm:text-7xl md:text-7xl mt-2">
+                  remember
                 </span>
-              </span>
-              <span className="block font-logo-sans text-[12vw] leading-[0.8] font-bold tracking-tighter uppercase opacity-90 break-words text-right mt-12 md:mt-0 mix-blend-screen">
-                EXPERIENCE
-              </span>
-            </h1>
-
-            <div className="mt-16 md:mt-24 max-w-2xl mx-auto text-center">
-              <p className="text-xl md:text-2xl font-light leading-relaxed text-cream/90">
-                A curated olfactory journey for the discerning guest. We bring the luxury perfumery directly to your event, crafting memories in real-time.
+              </h1>
+              <p
+                className="rise mt-6 text-lg font-light leading-relaxed text-primary/80 dark:text-cream/80 max-w-xl"
+                style={{ ['--d' as string]: '0.12s' }}
+              >
+                Inea Scents sets up a styled perfume bar at your event in Metro Manila. Guests
+                choose from 4 inspired scents and take home a 10ml bottle with your logo.
               </p>
+              <div className="rise mt-8 flex flex-col sm:flex-row gap-4" style={{ ['--d' as string]: '0.2s' }}>
+                <button
+                  onClick={scrollToInquiry}
+                  className="bg-primary text-cream px-10 py-4 rounded-full text-sm font-bold uppercase tracking-[0.2em] hover:bg-primary-dark dark:hover:bg-cream dark:hover:text-primary transition-colors inline-flex items-center justify-center gap-3"
+                >
+                  Ask About Your Date <ArrowIcon />
+                </button>
+                <a
+                  href="#packages"
+                  className="px-10 py-4 rounded-full text-sm font-bold uppercase tracking-[0.2em] border border-primary/25 dark:border-cream/25 text-center hover:bg-primary/5 dark:hover:bg-cream/10 transition-colors"
+                >
+                  Packages
+                </a>
+              </div>
+              <p
+                className="rise mt-6 text-sm font-bold uppercase tracking-[0.2em] text-primary/80 dark:text-cream/70"
+                style={{ ['--d' as string]: '0.28s' }}
+              >
+                Starts at Php 4,499 - 50-150 pax
+              </p>
+            </div>
+
+            <div className="lg:col-span-6 min-w-0">
+              <figure className="hero-photo relative">
+                <div className="absolute -inset-3 rounded-[28px] bg-accent/40 dark:bg-cream/10 -rotate-2" aria-hidden="true" />
+                <img
+                  src="/photos/bar-1440.webp"
+                  srcSet="/photos/bar-900.webp 900w, /photos/bar-1440.webp 1440w"
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  alt="The Inea Scents perfume bar at an event - white illuminated bar with four glass scent dispensers, floral styling, and a book-us sign"
+                  className="relative rounded-3xl w-full min-w-0 aspect-[16/10] sm:aspect-[4/5] lg:aspect-auto lg:h-[62svh] object-cover lift"
+                  fetchPriority="high"
+                />
+                <figcaption className="relative mt-4 text-sm text-primary/80 dark:text-cream/70 font-light text-center">
+                  Our bar, styled for a recent celebration in Metro Manila.
+                </figcaption>
+              </figure>
             </div>
           </div>
         </header>
 
-        {/* The Typographic Manifesto (Replacing the Stat Block) */}
-        <section className="border-y border-cream/10 py-32 bg-primary-dark/30">
-          <div className="max-w-7xl mx-auto px-6 lg:px-12">
-            <div className="grid md:grid-cols-12 gap-12 items-center">
-              <div className="md:col-span-5 relative group">
-                <div className="aspect-[3/4] bg-cream/5 overflow-hidden">
-                  <img src="https://images.unsplash.com/photo-1615160460366-2c9a41771b51?w=800&auto=format" alt="Luxury perfume bottle" className="w-full h-full object-cover opacity-80 mix-blend-luminosity hover:mix-blend-normal transition-all duration-700" />
-                </div>
-              </div>
-              <div className="md:col-span-7 md:pl-12">
-                <h2 className="font-logo-sans text-5xl md:text-7xl font-bold uppercase tracking-tighter mb-8 leading-none">Not Just a Favor.<br/>A Ritual.</h2>
-                <div className="space-y-8 text-lg font-light text-cream/80 leading-relaxed max-w-xl">
-                  <p>
-                    We have completely dismantled the traditional event favor. Instead of a forgotten keepsake, your guests are invited to a highly curated perfume bar.
-                  </p>
-                  <p>
-                    Guided by our professional Scent Concierge, they will explore over forty luxury-inspired fragrances, ultimately taking home a 10ml customized bottle tailored to their exact preference.
-                  </p>
-                  <div className="pt-8 border-t border-cream/20">
-                    <div className="flex items-end gap-6">
-                      <div className="font-logo-sans text-4xl font-bold uppercase tracking-tight">₱8,799</div>
-                      <div className="text-xs font-bold uppercase tracking-[0.2em] pb-1.5 text-cream/50">Base Investment (100 Bottles)</div>
-                    </div>
+        <section id="packages" className="relative py-16 md:py-20 scroll-mt-20">
+          <div className="max-w-7xl mx-auto px-6 lg:px-12 grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+            <div className="lg:col-span-5 min-w-0">
+              <h2 className="rise font-logo-sans text-4xl md:text-5xl font-bold uppercase tracking-tight leading-none">
+                One bar.
+                <br />
+                Sized to your guest list.
+              </h2>
+              <p className="rise mt-6 text-lg font-light leading-relaxed text-primary/80 dark:text-cream/80" style={{ ['--d' as string]: '0.1s' }}>
+                Every package is the same experience - the difference is only how many guests
+                take a bottle home. Four tiers, 50 to 150 guests, all with 10ml bottles.
+              </p>
+              <div className="rise mt-8 rounded-3xl bg-white dark:bg-night-surface border border-primary/15 dark:border-cream/15 p-8 lift" style={{ ['--d' as string]: '0.18s' }}>
+                <div className="flex items-end gap-4">
+                  <div className="font-logo-sans text-5xl font-bold tracking-tight">Php 4,499</div>
+                  <div className="text-xs font-bold uppercase tracking-[0.2em] pb-2 text-primary/80 dark:text-cream/70">
+                    Starting price
                   </div>
                 </div>
+                <dl className="mt-6 space-y-3 text-primary/80 dark:text-cream/80 font-light">
+                  <div className="flex justify-between border-b border-primary/10 dark:border-cream/10 pb-3">
+                    <dt>10ml - 50 guests</dt>
+                    <dd className="font-semibold text-primary dark:text-cream">Php 4,499</dd>
+                  </div>
+                  <div className="flex justify-between border-b border-primary/10 dark:border-cream/10 pb-3">
+                    <dt>10ml - 70 guests</dt>
+                    <dd className="font-semibold text-primary dark:text-cream">Php 6,399</dd>
+                  </div>
+                  <div className="flex justify-between border-b border-primary/10 dark:border-cream/10 pb-3">
+                    <dt>10ml - 100 guests</dt>
+                    <dd className="font-semibold text-primary dark:text-cream">Php 8,799</dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt>10ml - 150 guests</dt>
+                    <dd className="font-semibold text-primary dark:text-cream">Php 13,119</dd>
+                  </div>
+                </dl>
+                <button
+                  onClick={scrollToInquiry}
+                  className="mt-8 w-full bg-primary text-cream py-4 rounded-full text-sm font-bold uppercase tracking-[0.2em] hover:bg-primary-dark dark:hover:bg-cream dark:hover:text-primary transition-colors"
+                >
+                  Inquire About Your Date
+                </button>
+              </div>
+            </div>
+
+            <div className="lg:col-span-7 min-w-0 grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="rise rounded-3xl bg-white dark:bg-night-surface border border-primary/15 dark:border-cream/15 p-8 lift" style={{ ['--d' as string]: '0.1s' }}>
+                <h3 className="font-logo-sans text-xl font-bold uppercase tracking-tight mb-6">
+                  Every package includes
+                </h3>
+                <ul className="space-y-4">
+                  {INCLUDED.map((item) => (
+                    <li key={item} className="flex gap-3 text-primary/80 dark:text-cream/80 font-light leading-relaxed">
+                      <span className="mt-1 text-primary dark:text-cream shrink-0">
+                        <CheckIcon />
+                      </span>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="rise rounded-3xl bg-primary dark:bg-cream text-cream dark:text-primary p-8 lift" style={{ ['--d' as string]: '0.18s' }}>
+                <h3 className="font-logo-script text-4xl mb-6">On the house</h3>
+                <ul className="space-y-4">
+                  {FREE.map((item) => (
+                    <li key={item} className="flex gap-3 font-light leading-relaxed opacity-90">
+                      <span className="mt-1 shrink-0">
+                        <CheckIcon />
+                      </span>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+                <p className="mt-8 text-sm font-light opacity-70 leading-relaxed">
+                  The selfie mirror keeps guests busy while they wait - and the celebrant takes
+                  home something extra.
+                </p>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Social Proof */}
-        <section className="py-32 bg-primary">
+        <section className="relative py-16 md:py-20 bg-white/60 dark:bg-night-surface/40 border-y border-primary/10 dark:border-cream/10">
           <div className="max-w-7xl mx-auto px-6 lg:px-12">
-            <div className="text-center mb-16">
-              <div className="font-logo-script text-4xl text-accent mb-4">Trusted By</div>
-              <h2 className="font-logo-sans text-4xl font-bold uppercase tracking-widest text-cream">Over 200 Events</h2>
-            </div>
-            
-            <div className="grid md:grid-cols-3 gap-8 mb-20">
-              <div className="aspect-square bg-cream/5 overflow-hidden">
-                <img src="https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=800&auto=format" alt="Elegant wedding reception table setting" className="w-full h-full object-cover opacity-80 mix-blend-luminosity hover:mix-blend-normal transition-all duration-700" />
-              </div>
-              <div className="aspect-square bg-cream/5 overflow-hidden">
-                <img src="https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=800&auto=format" alt="Corporate event gathering with ambient lighting" className="w-full h-full object-cover opacity-80 mix-blend-luminosity hover:mix-blend-normal transition-all duration-700" />
-              </div>
-              <div className="aspect-square bg-cream/5 overflow-hidden">
-                <img src="https://images.unsplash.com/photo-1597401174620-33633ab0a726?w=800&auto=format" alt="Detailed shot of perfume bottles at an event" className="w-full h-full object-cover opacity-80 mix-blend-luminosity hover:mix-blend-normal transition-all duration-700" />
-              </div>
-            </div>
-
-            <div className="max-w-3xl mx-auto text-center">
-              <p className="text-2xl font-light italic text-cream/90 mb-6">"The perfume bar was the absolute highlight of our event. The Scent Concierge was phenomenal, and the guests couldn't stop talking about their custom bottles. Truly elevated the entire evening."</p>
-              <div className="text-sm font-bold uppercase tracking-widest text-cream/60">— Sarah &amp; James (Wedding)</div>
-            </div>
+            <h2 className="rise font-logo-sans text-4xl md:text-5xl font-bold uppercase tracking-tight text-center">
+              How the day goes
+            </h2>
+            <ol className="mt-12 grid grid-cols-1 md:grid-cols-4 gap-10">
+              {STEPS.map((step, i) => (
+                <li key={step.name} className="rise relative" style={{ ['--d' as string]: `${i * 0.1}s` }}>
+                  <span className="hidden md:block absolute top-5 left-0 right-0 h-px bg-primary/20 dark:bg-cream/20" aria-hidden="true" />
+                  <span className="relative inline-flex h-10 w-10 items-center justify-center rounded-full bg-primary text-cream dark:bg-cream dark:text-primary font-logo-sans font-bold mb-6">
+                    {i + 1}
+                  </span>
+                  <h3 className="text-sm font-bold uppercase tracking-[0.2em] mb-3">{step.name}</h3>
+                  <p className="text-primary/80 dark:text-cream/80 font-light leading-relaxed">{step.text}</p>
+                </li>
+              ))}
+            </ol>
           </div>
         </section>
 
-        {/* How It Works */}
-        <section className="py-32 bg-primary-dark/30 border-y border-cream/10">
-          <div className="max-w-7xl mx-auto px-6 lg:px-12">
-            <h2 className="font-logo-sans text-4xl font-bold uppercase tracking-widest text-center mb-20">The Process</h2>
-            
-            <div className="grid md:grid-cols-4 gap-12 text-center">
-              <div>
-                <div className="font-logo-sans text-5xl font-bold text-cream/10 mb-6">01</div>
-                <h3 className="text-sm font-bold uppercase tracking-[0.2em] mb-4">Reserve</h3>
-                <p className="text-cream/70 font-light leading-relaxed">Secure your date and consult with our team to curate the perfect fragrance selection for your demographic.</p>
-              </div>
-              <div>
-                <div className="font-logo-sans text-5xl font-bold text-cream/10 mb-6">02</div>
-                <h3 className="text-sm font-bold uppercase tracking-[0.2em] mb-4">The Setup</h3>
-                <p className="text-cream/70 font-light leading-relaxed">We arrive with our elegant display, requiring only a standard table. We seamlessly integrate with your venue's styling.</p>
-              </div>
-              <div>
-                <div className="font-logo-sans text-5xl font-bold text-cream/10 mb-6">03</div>
-                <h3 className="text-sm font-bold uppercase tracking-[0.2em] mb-4">The Experience</h3>
-                <p className="text-cream/70 font-light leading-relaxed">Guests are guided by our Scent Concierge to explore notes and discover a blend that resonates with them.</p>
-              </div>
-              <div>
-                <div className="font-logo-sans text-5xl font-bold text-cream/10 mb-6">04</div>
-                <h3 className="text-sm font-bold uppercase tracking-[0.2em] mb-4">Take Home</h3>
-                <p className="text-cream/70 font-light leading-relaxed">Each guest leaves with a bespoke 10ml fragrance bottle, a lasting, deeply personal memory of your event.</p>
+        <section id="inquire" className="relative py-10 md:py-20 scroll-mt-24">
+          <div className="max-w-7xl mx-auto px-6 lg:px-12 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-14 items-center lg:min-h-[calc(100svh-6rem)]">
+            <div className="lg:col-span-4 min-w-0">
+              <h2 className="rise font-logo-sans text-4xl sm:text-5xl md:text-6xl font-bold uppercase tracking-tight">
+                Let&rsquo;s begin
+              </h2>
+              <p className="rise mt-4 text-lg font-light text-primary/80 dark:text-cream/80" style={{ ['--d' as string]: '0.1s' }}>
+                Tell us about your event - we will reply to confirm availability.
+              </p>
+              <ul className="rise mt-8 space-y-3 hidden lg:block" style={{ ['--d' as string]: '0.18s' }}>
+                {[
+                  'You tell us your date and guest count',
+                  'You choose from 4 inspired scents',
+                  'Each guest takes home a 10ml bottle',
+                ].map((item) => (
+                  <li key={item} className="flex gap-3 text-primary/80 dark:text-cream/80 font-light leading-relaxed">
+                    <span className="mt-1 text-primary dark:text-cream shrink-0">
+                      <CheckIcon />
+                    </span>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+              <p className="rise mt-6 text-sm text-primary/80 dark:text-cream/70 font-light" style={{ ['--d' as string]: '0.24s' }}>
+                Prefer chat? Message us on{' '}
+                <a
+                  href="https://www.facebook.com/profile.php?id=61580331093927"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline underline-offset-4 decoration-accent hover:decoration-primary dark:hover:decoration-cream transition-colors"
+                >
+                  Facebook
+                </a>
+                .
+              </p>
+            </div>
+            <div className="lg:col-span-8 min-w-0 rise" style={{ ['--d' as string]: '0.15s' }}>
+              <div className="rounded-3xl bg-white dark:bg-night-surface border border-primary/15 dark:border-cream/15 p-5 md:p-8 lift">
+                <ContactForm />
               </div>
             </div>
           </div>
         </section>
-
-        {/* Inquiry Section */}
-        <section id="inquire" className="py-40">
-          <div className="max-w-3xl mx-auto px-6 lg:px-12">
-            <div className="text-center mb-24">
-              <h2 className="font-logo-sans text-5xl md:text-6xl font-bold uppercase tracking-tighter mb-6">Let's Begin</h2>
-              <p className="text-cream/70 text-lg font-light">Secure your date and allow us to begin crafting your bespoke bar.</p>
-              <p className="text-cream/50 text-sm mt-4 font-bold uppercase tracking-widest">No obligation &middot; We respond within 24 hours</p>
-            </div>
-            
-            <div className="pt-8">
-              <ContactForm />
-            </div>
-          </div>
-        </section>
-
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-cream/10 bg-primary-dark/50">
-        <div className="max-w-7xl mx-auto px-6 lg:px-12 py-12 flex flex-col md:flex-row items-center justify-between gap-8">
-          <Logo />
-          
-          <div className="flex items-center gap-6 text-cream/60">
-            <div className="text-xs font-bold uppercase tracking-[0.2em]">Manila, Philippines</div>
-            <div className="w-1 h-1 rounded-full bg-cream/30"></div>
-            <a href="https://www.instagram.com/" target="_blank" rel="noopener noreferrer" aria-label="Inea Scents on Instagram" className="hover:text-cream/80 transition-colors"><InstagramIcon /></a>
-            <a href="https://www.facebook.com/profile.php?id=61580331093927" target="_blank" rel="noopener noreferrer" aria-label="Inea Scents on Facebook" className="hover:text-cream/80 transition-colors"><FacebookIcon /></a>
+      <footer className="bg-primary-dark dark:bg-black/40 text-cream">
+        <div className="max-w-7xl mx-auto px-6 lg:px-12 py-14 flex flex-col md:flex-row items-center justify-between gap-8">
+          <Logo tone="cream" />
+          <div className="flex items-center gap-5 text-cream/70">
+            <div className="text-xs font-bold uppercase tracking-[0.2em]">Metro Manila, Philippines</div>
+            <div className="w-1 h-1 rounded-full bg-cream/40" aria-hidden="true" />
+            <a
+              href="https://www.facebook.com/profile.php?id=61580331093927"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Inea Scents on Facebook"
+              className="hover:text-cream transition-colors"
+            >
+              <FacebookIcon />
+            </a>
           </div>
-          
-          <div className="text-xs font-bold uppercase tracking-[0.2em] text-cream/40">
-            © 2026 Inea Scents
+          <div className="text-xs font-bold uppercase tracking-[0.2em] text-cream/70">
+            &copy; 2026 Inea Scents
           </div>
         </div>
       </footer>
