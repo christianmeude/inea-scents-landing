@@ -4,20 +4,32 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Inea Scents — Bespoke Perfume Bar for Your Event</title>
-    <meta name="description" content="A curated olfactory journey for the discerning guest. Inea Scents brings luxury perfumery directly to your wedding, corporate, or private event." />
-    <meta name="theme-color" content="#6a4053" />
+    <title>Inea Scents - Bespoke Perfume Bar for Your Event</title>
+    <meta name="description" content="Inea Scents sets up a styled perfume bar at events in Metro Manila. Guests choose from 4 inspired scents and take home a 10ml bottle with your logo. Starts at Php 4,499." />
+    <meta name="theme-color" content="#fdf4f5" />
+    <script>
+      try {
+        if (
+          localStorage.getItem('inea-theme') === 'dark' ||
+          (!localStorage.getItem('inea-theme') &&
+            window.matchMedia('(prefers-color-scheme: dark)').matches)
+        ) {
+          document.documentElement.classList.add('dark')
+        }
+      } catch (e) {}
+    </script>
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="Inea Scents — Bespoke Perfume Bar" />
-    <meta property="og:description" content="A curated olfactory journey for the discerning guest. We bring luxury perfumery directly to your event, crafting memories in real-time." />
+    <meta property="og:title" content="Inea Scents - Bespoke Perfume Bar" />
+    <meta property="og:description" content="A styled perfume bar for events in Metro Manila. Guests choose from 4 inspired scents and take home a 10ml bottle with your logo." />
     <meta property="og:image" content="/og.jpg" />
     <meta property="og:site_name" content="Inea Scents" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Inea Scents — Bespoke Perfume Bar" />
-    <meta name="twitter:description" content="A curated olfactory journey for the discerning guest." />
+    <meta name="twitter:title" content="Inea Scents - Bespoke Perfume Bar" />
+    <meta name="twitter:description" content="A styled perfume bar for events in Metro Manila. Starts at Php 4,499." />
     <meta name="twitter:image" content="/og.jpg" />
   </head>
   <body>
+    <!-- THESIS: the real bar is the proof - cream page, plum voice, photo-first Persuade. OWN-WORLD: cream ground, plum text/actions, dusty-rose accents, Josefin display + Great Vibes script, pill actions, soft-rectangle inputs, mesh glow from the login palette. STORY: visitor sees the actual bar, learns the one honest offer, and sends an inquiry. FIRST VIEWPORT: headline + availability CTA beside the real bar photo at editorial scale. FORM: user-pinned light-dominant direction with dark toggle; no concept roll (precise brief). FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md. -->
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

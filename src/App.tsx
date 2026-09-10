@@ -124,6 +124,17 @@ function ThemeButton({ theme, onToggle }: { theme: Theme; onToggle: () => void }
 }
 
 const API_BASE = (import.meta.env.VITE_API_URL ?? '').replace(/\/$/, '')
+const APP_BASE = (
+  import.meta.env.VITE_FRONTEND_URL ?? 'https://inea-scents.vercel.app'
+).replace(/\/$/, '')
+
+/* Mobile App login URL: env holds the base in prod, but a dev may paste a
+   full deep link incl. port + hash (Flutter web uses ephemeral ports). */
+function appLoginUrl() {
+  if (!APP_BASE) return '#inquire'
+  if (APP_BASE.includes('#')) return APP_BASE
+  return `${APP_BASE}/#/login`
+}
 
 function ContactForm() {
   const [form, setForm] = useState({ name: '', email: '', phone: '', date: '', message: '', website: '' })
@@ -205,7 +216,7 @@ function ContactForm() {
 
   if (sent) {
     return (
-      <div className="rounded-3xl bg-white dark:bg-night-surface border border-primary/15 dark:border-cream/15 p-8 md:p-10 text-center lift">
+      <div className="py-6 text-center">
         <h3
           tabIndex={-1}
           ref={(el) => {
@@ -260,7 +271,7 @@ function ContactForm() {
     ) : null
 
   return (
-    <form onSubmit={handle} noValidate className="space-y-5">
+    <form onSubmit={handle} noValidate className="space-y-6">
       <input
         type="text"
         name="website"
@@ -279,7 +290,7 @@ function ContactForm() {
           {errors.submit}
         </p>
       ) : null}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
         <div>
           <label htmlFor="name" className={labelClass}>
             Full Name
@@ -321,7 +332,7 @@ function ContactForm() {
           {err('email', 'email-error')}
         </div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
         <div>
           <label htmlFor="phone" className={labelClass}>
             Phone
@@ -458,11 +469,31 @@ export default function App() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  const scrollToInquiry = () =>
-    document.getElementById('inquire')?.scrollIntoView({ behavior: 'smooth' })
+  /* Measured scroll: nav height + breathing room, avoiding scroll-margin quirks. */
+  const scrollToEl = (id: string, mode: 'start' | 'center') => {
+    const el = document.getElementById(id)
+    if (!el) return
+    const navH = document.querySelector('nav')?.getBoundingClientRect().height ?? 72
+    const rect = el.getBoundingClientRect()
+    const absTop = rect.top + window.scrollY
+    const top =
+      mode === 'start'
+        ? absTop - navH - 16
+        : absTop + rect.height / 2 - window.innerHeight / 2
+    window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' })
+  }
+
+  const scrollToInquiry = () => scrollToEl('inquire', 'start')
+
+  const scrollToPackages = () => scrollToEl('packages', 'start')
 
   return (
     <div className="min-h-screen bg-cream dark:bg-night text-primary dark:text-cream selection:bg-primary selection:text-cream dark:selection:bg-cream dark:selection:text-primary font-body">
+      <div className="mesh-global" aria-hidden="true">
+        <span className="mesh-e" />
+        <span className="mesh-f" />
+        <span className="mesh-g" />
+      </div>
       <nav
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 border-b ${
           scrolled
@@ -474,6 +505,14 @@ export default function App() {
           <Logo />
           <div className="flex items-center gap-2 sm:gap-3">
             <ThemeButton theme={theme} onToggle={toggleTheme} />
+            <a
+              href={appLoginUrl()}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="border border-primary/25 dark:border-cream/25 text-primary dark:text-cream text-xs font-bold uppercase tracking-[0.2em] px-4 sm:px-6 py-3 rounded-full hover:bg-primary/5 dark:hover:bg-cream/10 transition-colors whitespace-nowrap"
+            >
+              Book in App
+            </a>
             <button
               onClick={scrollToInquiry}
               className="bg-primary text-cream dark:bg-cream dark:text-primary text-xs font-bold uppercase tracking-[0.2em] px-4 sm:px-6 py-3 rounded-full hover:bg-primary-dark dark:hover:bg-cream/90 transition-colors whitespace-nowrap"
@@ -495,9 +534,9 @@ export default function App() {
 
           <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-12 pt-24 md:pt-28 pb-12 md:pb-14 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-center lg:min-h-[100svh] lg:content-center">
             <div className="lg:col-span-6 min-w-0">
-              <h1 className="rise font-logo-sans font-bold uppercase tracking-tight leading-[0.95] text-4xl sm:text-6xl md:text-6xl text-balance">
+              <h1 className="rise display-bold font-logo-sans font-bold uppercase tracking-tight leading-[0.95] text-5xl sm:text-7xl md:text-7xl text-balance">
                 <span className="block">The perfume bar guests</span>
-                <span className="block font-logo-script normal-case font-normal tracking-normal text-5xl sm:text-7xl md:text-7xl mt-2">
+                <span className="block font-logo-script normal-case font-normal tracking-normal text-6xl sm:text-8xl md:text-8xl mt-2">
                   remember
                 </span>
               </h1>
@@ -515,12 +554,13 @@ export default function App() {
                 >
                   Ask About Your Date <ArrowIcon />
                 </button>
-                <a
-                  href="#packages"
+                <button
+                  type="button"
+                  onClick={scrollToPackages}
                   className="px-10 py-4 rounded-full text-sm font-bold uppercase tracking-[0.2em] border border-primary/25 dark:border-cream/25 text-center hover:bg-primary/5 dark:hover:bg-cream/10 transition-colors"
                 >
                   Packages
-                </a>
+                </button>
               </div>
               <p
                 className="rise mt-6 text-sm font-bold uppercase tracking-[0.2em] text-primary/80 dark:text-cream/70"
@@ -549,35 +589,35 @@ export default function App() {
           </div>
         </header>
 
-        <section id="packages" className="relative py-16 md:py-20 scroll-mt-20">
-          <div className="max-w-7xl mx-auto px-6 lg:px-12 grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+        <section id="packages" className="relative py-10 md:py-12 scroll-mt-24">
+          <div className="max-w-7xl mx-auto px-6 lg:px-12 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             <div className="lg:col-span-5 min-w-0">
-              <h2 className="rise font-logo-sans text-4xl md:text-5xl font-bold uppercase tracking-tight leading-none">
+              <h2 className="rise display-bold font-logo-sans text-4xl md:text-5xl font-bold uppercase tracking-tight leading-none">
                 One bar.
                 <br />
                 Sized to your guest list.
               </h2>
-              <p className="rise mt-6 text-lg font-light leading-relaxed text-primary/80 dark:text-cream/80" style={{ ['--d' as string]: '0.1s' }}>
+              <p className="rise mt-4 text-base font-light leading-relaxed text-primary/80 dark:text-cream/80" style={{ ['--d' as string]: '0.1s' }}>
                 Every package is the same experience - the difference is only how many guests
                 take a bottle home. Four tiers, 50 to 150 guests, all with 10ml bottles.
               </p>
-              <div className="rise mt-8 rounded-3xl bg-white dark:bg-night-surface border border-primary/15 dark:border-cream/15 p-8 lift" style={{ ['--d' as string]: '0.18s' }}>
+              <div className="rise mt-6 rounded-3xl bg-white dark:bg-night-surface border border-primary/15 dark:border-cream/15 p-6 lift" style={{ ['--d' as string]: '0.18s' }}>
                 <div className="flex items-end gap-4">
-                  <div className="font-logo-sans text-5xl font-bold tracking-tight">Php 4,499</div>
+                  <div className="font-logo-sans text-4xl font-bold tracking-tight">Php 4,499</div>
                   <div className="text-xs font-bold uppercase tracking-[0.2em] pb-2 text-primary/80 dark:text-cream/70">
                     Starting price
                   </div>
                 </div>
-                <dl className="mt-6 space-y-3 text-primary/80 dark:text-cream/80 font-light">
-                  <div className="flex justify-between border-b border-primary/10 dark:border-cream/10 pb-3">
+                <dl className="mt-4 space-y-2 text-primary/80 dark:text-cream/80 font-light">
+                  <div className="flex justify-between border-b border-primary/10 dark:border-cream/10 pb-2">
                     <dt>10ml - 50 guests</dt>
                     <dd className="font-semibold text-primary dark:text-cream">Php 4,499</dd>
                   </div>
-                  <div className="flex justify-between border-b border-primary/10 dark:border-cream/10 pb-3">
+                  <div className="flex justify-between border-b border-primary/10 dark:border-cream/10 pb-2">
                     <dt>10ml - 70 guests</dt>
                     <dd className="font-semibold text-primary dark:text-cream">Php 6,399</dd>
                   </div>
-                  <div className="flex justify-between border-b border-primary/10 dark:border-cream/10 pb-3">
+                  <div className="flex justify-between border-b border-primary/10 dark:border-cream/10 pb-2">
                     <dt>10ml - 100 guests</dt>
                     <dd className="font-semibold text-primary dark:text-cream">Php 8,799</dd>
                   </div>
@@ -588,19 +628,19 @@ export default function App() {
                 </dl>
                 <button
                   onClick={scrollToInquiry}
-                  className="mt-8 w-full bg-primary text-cream py-4 rounded-full text-sm font-bold uppercase tracking-[0.2em] hover:bg-primary-dark dark:hover:bg-cream dark:hover:text-primary transition-colors"
+                  className="mt-6 w-full bg-primary text-cream py-3.5 rounded-full text-sm font-bold uppercase tracking-[0.2em] hover:bg-primary-dark dark:hover:bg-cream dark:hover:text-primary transition-colors"
                 >
                   Inquire About Your Date
                 </button>
               </div>
             </div>
 
-            <div className="lg:col-span-7 min-w-0 grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <div className="rise rounded-3xl bg-white dark:bg-night-surface border border-primary/15 dark:border-cream/15 p-8 lift" style={{ ['--d' as string]: '0.1s' }}>
-                <h3 className="font-logo-sans text-xl font-bold uppercase tracking-tight mb-6">
+            <div className="lg:col-span-7 min-w-0 grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div className="rise rounded-3xl bg-white dark:bg-night-surface border border-primary/15 dark:border-cream/15 p-6 lift" style={{ ['--d' as string]: '0.1s' }}>
+                <h3 className="font-logo-sans text-xl font-bold uppercase tracking-tight mb-4">
                   Every package includes
                 </h3>
-                <ul className="space-y-4">
+                <ul className="space-y-3">
                   {INCLUDED.map((item) => (
                     <li key={item} className="flex gap-3 text-primary/80 dark:text-cream/80 font-light leading-relaxed">
                       <span className="mt-1 text-primary dark:text-cream shrink-0">
@@ -611,9 +651,9 @@ export default function App() {
                   ))}
                 </ul>
               </div>
-              <div className="rise rounded-3xl bg-primary dark:bg-cream text-cream dark:text-primary p-8 lift" style={{ ['--d' as string]: '0.18s' }}>
-                <h3 className="font-logo-script text-4xl mb-6">On the house</h3>
-                <ul className="space-y-4">
+              <div className="rise rounded-3xl bg-primary dark:bg-cream text-cream dark:text-primary p-6 lift" style={{ ['--d' as string]: '0.18s' }}>
+                <h3 className="font-logo-script text-4xl mb-4">On the house</h3>
+                <ul className="space-y-3">
                   {FREE.map((item) => (
                     <li key={item} className="flex gap-3 font-light leading-relaxed opacity-90">
                       <span className="mt-1 shrink-0">
@@ -623,7 +663,7 @@ export default function App() {
                     </li>
                   ))}
                 </ul>
-                <p className="mt-8 text-sm font-light opacity-70 leading-relaxed">
+                <p className="mt-6 text-sm font-light opacity-70 leading-relaxed">
                   The selfie mirror keeps guests busy while they wait - and the celebrant takes
                   home something extra.
                 </p>
@@ -652,47 +692,29 @@ export default function App() {
           </div>
         </section>
 
-        <section id="inquire" className="relative py-10 md:py-20 scroll-mt-24">
-          <div className="max-w-7xl mx-auto px-6 lg:px-12 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-14 items-center lg:min-h-[calc(100svh-6rem)]">
-            <div className="lg:col-span-4 min-w-0">
-              <h2 className="rise font-logo-sans text-4xl sm:text-5xl md:text-6xl font-bold uppercase tracking-tight">
-                Let&rsquo;s begin
-              </h2>
-              <p className="rise mt-4 text-lg font-light text-primary/80 dark:text-cream/80" style={{ ['--d' as string]: '0.1s' }}>
-                Tell us about your event - we will reply to confirm availability.
-              </p>
-              <ul className="rise mt-8 space-y-3 hidden lg:block" style={{ ['--d' as string]: '0.18s' }}>
-                {[
-                  'You tell us your date and guest count',
-                  'You choose from 4 inspired scents',
-                  'Each guest takes home a 10ml bottle',
-                ].map((item) => (
-                  <li key={item} className="flex gap-3 text-primary/80 dark:text-cream/80 font-light leading-relaxed">
-                    <span className="mt-1 text-primary dark:text-cream shrink-0">
-                      <CheckIcon />
-                    </span>
-                    {item}
-                  </li>
-                ))}
-              </ul>
-              <p className="rise mt-6 text-sm text-primary/80 dark:text-cream/70 font-light" style={{ ['--d' as string]: '0.24s' }}>
-                Prefer chat? Message us on{' '}
-                <a
-                  href="https://www.facebook.com/profile.php?id=61580331093927"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="underline underline-offset-4 decoration-accent hover:decoration-primary dark:hover:decoration-cream transition-colors"
-                >
-                  Facebook
-                </a>
-                .
-              </p>
+        <section id="inquire" className="relative py-16 md:py-20 scroll-mt-24 bg-white/60 dark:bg-night-surface/40 border-y border-primary/10 dark:border-cream/10">
+          <div className="max-w-3xl mx-auto px-6 text-center">
+            <h2 className="rise display-bold font-logo-sans text-5xl sm:text-6xl md:text-7xl font-bold uppercase tracking-tight">
+              Let&rsquo;s begin
+            </h2>
+            <p className="rise mt-4 text-lg font-light text-primary/80 dark:text-cream/80" style={{ ['--d' as string]: '0.1s' }}>
+              Tell us about your event - we will reply to confirm availability.
+            </p>
+            <div className="rise mt-10 text-left" style={{ ['--d' as string]: '0.15s' }}>
+              <ContactForm />
             </div>
-            <div className="lg:col-span-8 min-w-0 rise" style={{ ['--d' as string]: '0.15s' }}>
-              <div className="rounded-3xl bg-white dark:bg-night-surface border border-primary/15 dark:border-cream/15 p-5 md:p-8 lift">
-                <ContactForm />
-              </div>
-            </div>
+            <p className="rise mt-8 text-sm text-primary/80 dark:text-cream/70 font-light" style={{ ['--d' as string]: '0.2s' }}>
+              Prefer chat? Message us on{' '}
+              <a
+                href="https://www.facebook.com/profile.php?id=61580331093927"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline underline-offset-4 decoration-accent hover:decoration-primary dark:hover:decoration-cream transition-colors"
+              >
+                Facebook
+              </a>
+              .
+            </p>
           </div>
         </section>
       </main>
@@ -702,6 +724,15 @@ export default function App() {
           <Logo tone="cream" />
           <div className="flex items-center gap-5 text-cream/70">
             <div className="text-xs font-bold uppercase tracking-[0.2em]">Metro Manila, Philippines</div>
+            <div className="w-1 h-1 rounded-full bg-cream/40" aria-hidden="true" />
+            <a
+              href={appLoginUrl()}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs font-bold uppercase tracking-[0.2em] hover:text-cream transition-colors"
+            >
+              Book in App
+            </a>
             <div className="w-1 h-1 rounded-full bg-cream/40" aria-hidden="true" />
             <a
               href="https://www.facebook.com/profile.php?id=61580331093927"

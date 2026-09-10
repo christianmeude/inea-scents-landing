@@ -86,6 +86,15 @@ The palette is derived directly from the brand's floral and cosmetic inspiration
 - **Light Cream** (#fdf4f5): The primary background color for the application shell, providing a warm alternative to stark white.
 - **Surface White** (#ffffff): Used for content cards (like the calendar component or product cards) to contrast against the cream background.
 
+**Plum usage rule (landing).** Dark Plum (#6a4053) owns text, buttons, and borders — never the page background. Cream is the dominant surface in light theme; in dark theme the base is Night (#151012) with Night Surface (#1c1618) cards and Night Border (#36222c) lines. Plum-as-wallpaper is a regression, not a variant.
+
+### Mesh glow
+- Decorative blurred blobs sampled from the Admin login (`GuestLayout`): Peach #dabdac, Mauve #c08d9e, Pale Rose #c4a5a8, Plum #6e3c53. Opacity (not hue) adapts them to the light page. Dark theme deepens them toward Burgundy 900/950.
+- Error text on cream uses Clay (#b7374b, burgundy ramp) for contrast, not the Unavailable pink.
+
+### Reserved decor
+- `public/assets/hero-atmosphere.webp` (plum silk + petals, AI-generated ambience) is intentionally unused. It is decorative atmosphere, never product photography — it may back a dark-theme moment or a washed-out band later, but never illustrate the bar itself.
+
 ### Scrim
 - **Light Scrim** (rgba(43, 15, 31, 0.5)): Overlay for modal backgrounds and image dimming (light contexts).
 - **Dark Scrim** (rgba(43, 15, 31, 0.62)): Overlay for hero sections and full-bleed image overlays.
