@@ -1,32 +1,48 @@
-# React + TypeScript + Vite
+# Inea Scents - Customer Landing Page
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+> The customer-facing web application and marketing landing page for the Inea Scents platform.
 
-Currently, two official plugins are available:
+## 🌍 The Ecosystem
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+The Inea Scents platform consists of three separate repositories. This repository relies on the backend for data:
+1. **`inea-scents-landing` (This Repo)**: React/Vite customer-facing marketing website.
+2. **`inea-scents`**: Laravel backend, PostgreSQL database, and Admin Dashboard.
+3. **`inea_scents_client`**: Flutter cross-platform mobile application for customer bookings.
 
-## React Compiler
+## ⚡ Quick Start
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```bash
+# 1. Install dependencies
+npm install
 
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+# 2. Start development server
+npm run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+The application will launch and typically be available at `http://localhost:5173`.
+
+## 📋 Prerequisites
+
+- Node.js
+- NPM
+
+## 🛠️ Technology Stack
+
+- **Framework**: React 19
+- **Build Tool**: Vite
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **Linting**: Oxlint
+
+## ✨ Features
+
+- **Marketing Hub**: Public entry point detailing the Inea Scents experience.
+- **Responsive Design**: Mobile-first design adapting to all screen sizes.
+- **Integration Ready**: Configured to connect with the backend for dynamic package loading and inquiry submissions.
+
+## 🔌 Connectivity
+
+This frontend application relies on the `inea-scents` Backend API for dynamic data. When developing locally, ensure the backend repository is running simultaneously (usually at `http://127.0.0.1:8000`) so that API requests can resolve correctly.
+
+---
+*Status: Active Development*
